@@ -1,0 +1,97 @@
+# CreatePages-AI: AI-Powered Textual Analysis Tool
+
+CreatePages-AI is a command-line tool designed to automate the process of searching, categorizing, and compiling quotes from the official Baha'i reference library. It uses a hybrid AI approach to leverage the unique strengths of different models, producing a thematically organized, wiki-formatted page of concise excerpts on any given topic.
+
+## Features
+
+-   **Automated Text Search:** Scans a local directory of texts to find all paragraphs containing a specific keyword.
+-   **AI-Powered Categorization:** Uses Google's Gemini Pro to analyze the full context of every found passage and group them into 5-10 recurring themes.
+-   **AI-Powered Distillation:** Uses OpenAI's GPT-4 to distill the full paragraphs into concise, relevant excerpts.
+-   **Verbatim Validation:** A final quality-assurance step that compares the AI-generated excerpt against the original text to flag any non-verbatim changes, ensuring textual integrity.
+-   **Wiki-Ready Output:** Formats the final, validated quotes into a MediaWiki-compatible text file, complete with category headings and quote templates.
+-   **Modular Design:** Each step of the process can be run individually for testing, development, and refining prompts.
+
+## The Workflow Explained
+
+The main script orchestrates a sophisticated five-step pipeline designed for maximum quality and accuracy:
+
+1.  **Search (`search_library.py`):** The process begins by searching all files in the `library/` directory for a given keyword. It saves every paragraph where the keyword is found into structured JSON files in the `workspace/` directory.
+
+2.  **Categorize (`categorize_quotes.py`):** The script gathers the **full paragraph text** from all the search results and sends them in a single request to the Gemini API. Gemini analyzes the complete context to identify overarching themes and assigns each quote to a category. This ensures high-quality, context-aware categorization.
+
+3.  **Distill (`distill_quotes.py`):** The categorized, full-text quotes are then processed by the ChatGPT API. Its task is to create a short, relevant excerpt from each paragraph, using ellipses (...) to indicate removed text.
+
+4.  **Format (`format_wiki.py`):** This script takes the categorized and distilled quotes and assembles them into a final, clean text file formatted for MediaWiki. It organizes quotes under their category headings and uses a `{{q|...}}` template.
+
+5.  **Validate (`validate_quotes.py`):** As a final, crucial QA step, this script compares every single distilled excerpt against its original source paragraph. If the excerpt is not a perfect, verbatim substring of the original, it prepends a `[Warning]` tag inside the quote template, flagging it for manual review.
+
+## Setup Instructions
+
+### 1. Prerequisites
+
+-   Python 3.7+
+-   A local `library/` directory in the project root containing the Baha'i texts as plain text files. The `search_library.py` script is configured to search these.
+-   API keys for both OpenAI (GPT-4) and Google AI (Gemini Pro).
+
+### 2. Installation
+
+Clone this repository
+
+Install the required Python packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Configuration
+
+Move `.env.example` to `.env` and add your API keys
+
+    ```
+    OPENAI_API_KEY="sk-..."
+    GEMINI_API_KEY="..."
+    ```
+
+## Usage
+
+### Main Workflow (Recommended)
+
+To run the entire end-to-end process for a keyword, use the `main_process.py` script. This is the simplest and recommended way to use the tool.
+
+```bash
+python main_process.py <keyword>
+```
+
+**Example:**
+
+```bash
+python main_process.py government
+```
+
+This command will execute the full five-step pipeline. All intermediate files will be stored in `workspace/government/`, and the final, validated output will be saved in the root directory as `final_output_government.txt`.
+
+### Individual Scripts (For Testing & Development)
+
+You can also run each module individually. This is useful for refining prompts, re-running a specific step, or testing different AI models.
+
+**Example: Re-running the distillation step for a single file**
+
+First, ensure the categorization step has been run. Then, to re-run distillation on a single file with ChatGPT to test a new prompt:
+
+```bash
+python modules/distill_quotes.py government ChatGPT government_kitab-i-iqan_categorized-Gemini.txt
+```
+
+**Example: Formatting a test output from Gemini**
+
+If you manually ran the whole pipeline using only Gemini, you can format its specific output:
+
+```bash
+python modules/format_wiki.py government Gemini
+```
+
+**Example: Validating a specific model's output**
+
+```bash
+python modules/validate_quotes.py government Gemini
+```

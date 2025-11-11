@@ -37,6 +37,10 @@ pythonscripts/
 pywikibot/
 
 # Ignore specific files and folders
-Bahaiquest/Archive/
-Bahaiquest/final_output_*.txt
-Bahaiquest/workspace/
+Bahaiquest/CreatePages-AI/final_output_*.txt
+Bahaiquest/CreatePages-AI/workspace/
+
+# IMPORTANT: Make an exception for the .gitkeep file.
+# The '!' negates the previous rule for this specific file,
+# allowing us to commit the empty directory structure.
+!Bahaiquest/CreatePages-AI/workspace/.gitkeep
