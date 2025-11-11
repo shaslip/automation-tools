@@ -12,6 +12,20 @@ import sys
 import time
 import random
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# API Endpoint and Authorization are now loaded from the environment
+url = os.getenv("BAHAI_LIBRARY_API_URL")
+auth_token = os.getenv("BAHAI_LIBRARY_AUTH_TOKEN")
+
+headers = {
+    "Authorization": auth_token,
+    "Content-Type": "application/json",
+    "User-Agent": "Mozilla/5.0"
+}
 
 # API Endpoint
 url = "https://f4e3b80fb962746a74ba859b4b27e7d6.us-east-1.aws.found.io/library/_search"
