@@ -38,7 +38,7 @@ pywikibot/
 
 # Ignore specific files and folders
 Bahaiquest/CreatePages-AI/final_output_*.txt
-Bahaiquest/CreatePages-AI/workspace/
+Bahaiquest/CreatePages-AI/workspace/*
 
 # IMPORTANT: Make an exception for the .gitkeep file.
 # The '!' negates the previous rule for this specific file,
