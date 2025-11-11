@@ -2,11 +2,11 @@
 
 CreatePages-AI is a command-line tool designed to automate the process of searching, categorizing, and compiling quotes from the official Baha'i reference library. It uses a hybrid AI approach to leverage the unique strengths of different models, producing a thematically organized, wiki-formatted page of concise excerpts on any given topic.
 
-## The Workflow Explained
+## Workflow
 
-The main script orchestrates a sophisticated five-step pipeline designed for maximum quality and accuracy:
+The main script executes the following 5 scripts:
 
-1.  **Search (`search_library.py`):** The process begins by searching bahai.org/library for a given keyword. It saves every paragraph where the keyword is found into structured JSON files in the `workspace/` directory, organized by source.
+1.  **Search (`search_library.py`):** Searches bahai.org/library for a given keyword. It saves every paragraph where the keyword is found into structured JSON files in the `workspace/` directory, organized by source.
 
 2.  **Categorize (`categorize_quotes.py`):** The script gathers all text from all the search results and sends them in a single request to the Gemini API. Gemini analyzes the text to identify overarching themes and assigns each quote to a category. 
 
@@ -40,10 +40,22 @@ pip install -r requirements.txt
 
 Move `.env.example` to `.env` and add your API keys
 
-    ```
-    OPENAI_API_KEY="sk-..."
-    GEMINI_API_KEY="..."
-    ```
+```bash
+OPENAI_API_KEY="sk-..."
+GEMINI_API_KEY="..."
+BAHAI_LIBRARY_API_URL="https://xxxxxxxxxxxxxxx.us-east-1.aws.found.io/library/_search"
+BAHAI_LIBRARY_AUTH_TOKEN="Basic xxxxxxxxxxxxxx"
+```
+To get the library API and URL
+
+1.  Open your web browser (like Chrome or Firefox) and go to `https://www.bahai.org/library/`.
+2.  Open the **Developer Tools** (usually by pressing `F12` or `Ctrl+Shift+I`).
+3.  Go to the **Network** tab.
+4.  In the library's search bar, type a simple word (like "God") and press Enter.
+5.  In the Network tab, look for a new entry named `_search`. Click on it.
+6.  In the "Headers" panel for that request, you will find:
+    *   **Request URL:** This is the value for `BAHAI_LIBRARY_API_URL`.
+    *   **Authorization:** This is the full value for `BAHAI_LIBRARY_AUTH_TOKEN` (it should start with `Basic ...`).
 
 ## Usage
 
