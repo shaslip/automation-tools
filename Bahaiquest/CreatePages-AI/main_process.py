@@ -1,3 +1,7 @@
+r"""
+Usage: python main_process.py <keyword>
+"""
+
 import os
 import sys
 import subprocess
@@ -28,8 +32,12 @@ def main(keyword):
         print(f"!!! ERROR: Search script not found at '{search_script_path}'.")
         sys.exit(1)
     except subprocess.CalledProcessError as e:
-        print(f"!!! ERROR: Your search script failed with the following error:")
+        print(f"!!! ERROR: Your search script failed with a non-zero exit code: {e.returncode}")
+        print("\n--- Standard Output (stdout) ---")
+        print(e.stdout)
+        print("\n--- Standard Error (stderr) ---")
         print(e.stderr)
+        print("---------------------------------")
         sys.exit(1)
 
     # --- Step 2: Categorize Quotes (using Gemini) ---
