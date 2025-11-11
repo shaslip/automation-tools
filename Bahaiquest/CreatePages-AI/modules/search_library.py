@@ -104,10 +104,17 @@ def search_bahai_library(query, keyword_filter, batch_size=50, max_retries=5):
 # Read keyword filters from file
 def load_keyword_filters(filename="keyword_filter.txt"):
     try:
-        with open(filename, "r", encoding="utf-8") as file:
+        # Get the absolute path to the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the full path to the filter file, assuming it's in the same directory as the script
+        file_path = os.path.join(script_dir, filename)
+
+        with open(file_path, "r", encoding="utf-8") as file:
             return [line.strip() for line in file if line.strip()]
     except FileNotFoundError:
-        print(f"Error: {filename} not found.")
+        # Use the full path in the error message for clearer debugging
+        print(f"Error: {file_path} not found.")
         sys.exit(1)
 
 # Command-line input handling
