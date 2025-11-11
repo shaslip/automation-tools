@@ -27,16 +27,6 @@ headers = {
     "User-Agent": "Mozilla/5.0"
 }
 
-# API Endpoint
-url = "https://f4e3b80fb962746a74ba859b4b27e7d6.us-east-1.aws.found.io/library/_search"
-
-# Authorization
-headers = {
-    "Authorization": "Basic cmVhZG9ubHk6NnhiODRkZm03M29lcjNnMnJx",
-    "Content-Type": "application/json",
-    "User-Agent": "Mozilla/5.0"
-}
-
 # Function to perform search with rate limiting
 def search_bahai_library(query, keyword_filter, batch_size=50, max_retries=5):
     all_results = []
