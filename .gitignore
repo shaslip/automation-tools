@@ -1,0 +1,42 @@
+# Environment variables
+.env
+*.env
+
+# Python specific
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+*.venv/
+
+# IDE / Editor specific
+.vscode/
+.idea/
+
+#Other
+# Files
+add_one_page_number.py
+autoctrlendv.ascr
+autoctrlv.ascr
+fail2ban.txt
+input.txt
+ips.py
+nginx_search_first_two_octets.txt
+nginx_search_ip_counts.txt
+output.txt
+ud.py
+UDtest.txt
+
+# Directories
+Bahaidata/
+Bahaimedia/
+Bahaiworks/
+Multicrop/
+pythonscripts/
+pywikibot/
+
+# Ignore specific files and folders
+Bahaiquest/Archive/
+Bahaiquest/final_output_*.txt
+Bahaiquest/workspace/
