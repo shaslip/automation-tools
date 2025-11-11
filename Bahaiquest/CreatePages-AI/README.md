@@ -67,24 +67,50 @@ This command will execute the full five-step pipeline. All intermediate files wi
 
 You can also run each module individually. This is useful for refining prompts, re-running a specific step, or testing different AI models.
 
-**Example: Re-running the distillation step for a single file**
-
-First, ensure the categorization step has been run. Then, to re-run distillation on a single file with ChatGPT to test a new prompt:
+**Step 1: search_library.py**
 
 ```bash
-python modules/distill_quotes.py government ChatGPT government_kitab-i-iqan_categorized-Gemini.txt
+python search_library.py <keyword>
+
+Eg: python search_library.py government
 ```
 
-**Example: Formatting a test output from Gemini**
+**Step 2: categorize_quotes.py**
 
-If you manually ran the whole pipeline using only Gemini, you can format its specific output:
+The token length is typically too long for the ChatGPT model, so we recommend Gemini
 
 ```bash
-python modules/format_wiki.py government Gemini
+python search_library.py <keyword> [model_name]
+
+Eg: python search_library.py government
+Eg: python search_library.py government Gemini
 ```
 
-**Example: Validating a specific model's output**
+**Step 3: distill_quotes.py**
 
 ```bash
-python modules/validate_quotes.py government Gemini
+python distill_quotes.py <keyword> [model_name] [file_name]
+
+python distill_quotes.py government Gemini
+python distill_quotes.py government ChatGPT government_kitab-i-iqan_categorized-Gemini.txt
+```
+
+**Step 4: format_wiki.py**
+
+The previous step should have produced a file like book_title_final_for_wiki-ChatGPT.txt, therefore ChatGPT would be the [model_name] in this step.
+
+```bash
+python format_wiki.py <keyword> [model_name]
+
+python format_wiki.py government Gemini
+```
+
+**Step 5: validate_quotes.py**
+
+The previous step shold have produced a file like final_output_ChatGPT_government.txt depending on the model name you provided, use that in the next step:
+
+```bash
+python validate_quotes.py <keyword> [model_name]
+
+python validate_quotes.py government Gemini
 ```
