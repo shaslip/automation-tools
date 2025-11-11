@@ -82,6 +82,7 @@ You can also run each module individually. This is useful for refining prompts, 
 **Step 1: search_library.py**
 
 ```bash
+cd modules/
 python search_library.py <keyword>
 
 Eg: python search_library.py government
