@@ -15,7 +15,7 @@ CreatePages-AI is a command-line tool designed to automate the process of search
 
 The main script orchestrates a sophisticated five-step pipeline designed for maximum quality and accuracy:
 
-1.  **Search (`search_library.py`):** The process begins by searching all files in the `library/` directory for a given keyword. It saves every paragraph where the keyword is found into structured JSON files in the `workspace/` directory.
+1.  **Search (`search_library.py`):** The process begins by searching all files in the `workspace/` directory for a given keyword. It saves every paragraph where the keyword is found into structured JSON files in the `workspace/` directory.
 
 2.  **Categorize (`categorize_quotes.py`):** The script gathers the **full paragraph text** from all the search results and sends them in a single request to the Gemini API. Gemini analyzes the complete context to identify overarching themes and assigns each quote to a category. This ensures high-quality, context-aware categorization.
 
@@ -30,7 +30,6 @@ The main script orchestrates a sophisticated five-step pipeline designed for max
 ### 1. Prerequisites
 
 -   Python 3.7+
--   A local `library/` directory in the project root containing the Baha'i texts as plain text files. The `search_library.py` script is configured to search these.
 -   API keys for both OpenAI (GPT-4) and Google AI (Gemini Pro).
 
 ### 2. Installation
