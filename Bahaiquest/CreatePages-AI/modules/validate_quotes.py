@@ -4,34 +4,24 @@ import sys
 import re
 import json
 
-def normalize_text(text):
-    """
-    Removes HTML tags and normalizes whitespace to prepare text for comparison.
-    This ensures that minor formatting differences (like <u>) don't cause false negatives.
-    """
-    # Remove any HTML-like tags (e.g., <u>, <i>)
-    text = re.sub(r'<[^>]+>', '', text)
-    # Replace multiple whitespace characters (spaces, newlines, tabs) with a single space
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text
-
-def load_original_quotes(keyword_dir):
+def load_original_quotes(keyword, keyword_dir):
     """
     Loads all original, full-text quotes from the initial search results.
     Returns a dictionary mapping {location_id: full_quote_text}.
     """
     originals = {}
     print("-> Loading original full-text quotes for comparison...")
-
-    # Find the raw source files from the search step
     try:
-        source_files = [f for f in os.listdir(keyword_dir) if f.endswith('.txt') and '_categorized' not in f and '_final' not in f]
+        source_files = [f for f in os.listdir(keyword_dir) if f.startswith(keyword) and f.endswith('.txt') and '_categorized' not in f and '_final' not in f]
         if not source_files:
             print(f"  ! Warning: No original source files found in {keyword_dir}.")
             return None
 
         for filename in source_files:
             filepath = os.path.join(keyword_dir, filename)
+            if os.path.getsize(filepath) == 0:
+                print(f"  ! Warning: Skipping empty source file: {filename}")
+                continue
             with open(filepath, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 for item in data:
@@ -39,17 +29,18 @@ def load_original_quotes(keyword_dir):
 
         print(f"  -> Loaded {len(originals)} original quotes.")
         return originals
+    except json.JSONDecodeError as e:
+        print(f"  ! FATAL Error: A source file is not valid JSON. Please check files in '{keyword_dir}'. Error: {e}")
+        return None
     except Exception as e:
         print(f"  ! Error loading original quotes: {e}")
         return None
 
-def run(final_file_path, original_quotes):
+def _validate_and_update_wikitext_file(final_file_path, original_quotes_map):
     """
-    Validates a single final output file, adding [Warning] tags where excerpts
-    are not verbatim substrings of their normalized originals.
+    Validates a single final WikiText output file. It parses {{q|...}} templates,
+    checks for verbatim excerpts, and adds a '[Warning]' tag in-place for any mismatches.
     """
-    keyword = os.path.basename(os.path.dirname(original_quotes['__source_dir__'])) # A bit of a hack to get the keyword
-
     print(f"\n----- Validating: {os.path.basename(final_file_path)} -----")
 
     try:
@@ -61,6 +52,7 @@ def run(final_file_path, original_quotes):
 
     warnings_added = 0
     quotes_processed = 0
+    # Regex to capture the parts of the {{q|...}} template
     quote_template_regex = re.compile(r"(\{\{q\|)(.*?)(\|)(.*?)(\|)(.*?)(\}\})")
 
     for i, line in enumerate(lines):
@@ -68,78 +60,76 @@ def run(final_file_path, original_quotes):
         if match:
             quotes_processed += 1
 
+            full_template = match.group(0)
+            quote_prefix = match.group(1) # '{{q|'
             excerpt = match.group(2)
+            pipe1 = match.group(3) # '|'
             location = match.group(4)
+            pipe2 = match.group(5) # '|'
+            source = match.group(6)
+            template_suffix = '}}'
 
-            if excerpt.startswith('[Warning]'):
+            # Skip lines that have already been marked with a warning
+            if excerpt.strip().startswith('[Warning]'):
                 continue
 
-            original_quote = original_quotes.get(location)
+            original_quote = original_quotes_map.get(location)
             if not original_quote:
                 print(f"  ! Warning: No original text found for location '{location}'. Skipping.")
                 continue
 
-            normalized_original = normalize_text(original_quote)
-            normalized_excerpt = normalize_text(excerpt.replace('...', ''))
+            # Perform the strict, verbatim check as requested
+            excerpt_for_check = excerpt.strip().strip('...').strip()
 
-            if normalized_excerpt not in normalized_original:
+            if excerpt_for_check not in original_quote:
                 warnings_added += 1
-                new_line = line.replace(excerpt, f"[Warning] {excerpt}")
+                # Reconstruct the line with the warning tag to preserve formatting
+                new_excerpt = f"[Warning] {excerpt}"
+                new_line = line.replace(excerpt, new_excerpt, 1) # Replace only the first occurrence
                 lines[i] = new_line
                 print(f"  -> Mismatch found for location {location}. Adding warning.")
 
     if warnings_added > 0:
-        print(f"-> Found {warnings_added} potential issues out of {quotes_processed} quotes.")
+        print(f"-> Found {warnings_added} issues out of {quotes_processed} quotes.")
         print(f"-> Overwriting file with warnings added.")
         with open(final_file_path, 'w', encoding='utf-8') as f:
             f.writelines(lines)
     else:
         print(f"-> Success! All {quotes_processed} quotes passed validation.")
 
-if __name__ == '__main__':
-    if len(sys.argv) not in [2, 3]:
-        print("Usage: python modules/validate_quotes.py <keyword> [model_name]")
-        print("  [model_name] is optional. If omitted, all existing final output files are validated.")
-        sys.exit(1)
-
-    keyword = sys.argv[1]
-
+def validate(keyword):
+    """
+    Main entry point for validation. Finds all final WikiText output files for a keyword,
+    loads the original source quotes, and validates each file.
+    """
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     keyword_dir = os.path.join(project_root, 'workspace', keyword)
 
-    # Step 1: Load the original quotes once for efficiency
-    original_quotes = load_original_quotes(keyword_dir)
+    original_quotes = load_original_quotes(keyword, keyword_dir)
     if not original_quotes:
         print("!!! Aborting validation: Could not load original quotes.")
         sys.exit(1)
-    original_quotes['__source_dir__'] = keyword_dir # Store source for later
 
-    # Step 2: Determine which files to validate
+    print("\nSearching for final WikiText output files to validate...")
     files_to_validate = []
-    if len(sys.argv) == 3:
-        # A specific model was requested
-        model_arg = sys.argv[2]
-        model_name = ''
-        if model_arg.lower() == 'chatgpt': model_name = 'ChatGPT'
-        elif model_arg.lower() == 'gemini': model_name = 'Gemini'
-        else:
-            print(f"Error: Invalid model name '{model_arg}'.")
-            sys.exit(1)
-        files_to_validate.append(os.path.join(project_root, f'final_output_{model_name}_{keyword}.txt'))
-    else:
-        # Default: Find all possible output files
-        print("No model specified. Searching for all final output files...")
-        files_to_validate.append(os.path.join(project_root, f'final_output_{keyword}.txt'))
-        files_to_validate.append(os.path.join(project_root, f'final_output_ChatGPT_{keyword}.txt'))
-        files_to_validate.append(os.path.join(project_root, f'final_output_Gemini_{keyword}.txt'))
+    file_pattern_end = f'_{keyword}.txt'
+    for filename in os.listdir(project_root):
+        if filename.startswith('final_output_') and filename.endswith(file_pattern_end):
+             files_to_validate.append(os.path.join(project_root, filename))
 
-    # Step 3: Loop through the list and validate any that exist
-    found_any_files = False
+    if not files_to_validate:
+        print(f"\n!!! ERROR: No final output files found for keyword '{keyword}' in root directory.")
+        print("    Example expected filename: 'final_output_ChatGPT_power.txt'")
+        return
+
     for file_path in files_to_validate:
         if os.path.exists(file_path):
-            found_any_files = True
-            run(file_path, original_quotes)
+            _validate_and_update_wikitext_file(file_path, original_quotes)
 
-    if not found_any_files:
-        print(f"\n!!! ERROR: No final output files found for keyword '{keyword}'.")
-        print("Ensure you have run the format_wiki.py script first.")
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print("Usage: python modules/validate_quotes.py <keyword>")
+        print("  This will automatically find and validate all 'final_output_*_<keyword>.txt' files.")
+        sys.exit(1)
+
+    validate(keyword=sys.argv[1])

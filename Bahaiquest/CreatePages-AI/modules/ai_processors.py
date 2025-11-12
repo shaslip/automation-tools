@@ -39,7 +39,7 @@ Rules:
 3. Assign each quote to EXACTLY ONE descriptive category that best describes it.
 4. If a paragraph does not fit into ANY of the categories you identified, assign it to "Uncategorized".
 5. The input is a JSON array of objects, where each object has a unique "location" and the full "quote" paragraph.
-6. On each new line return one category followed by all matching "location" identifiers with NO spaces between location identifers.
+6. On each new line return one category followed by all matching "location" identifiers. NO spaces NO commas NO seperators between location identifers.
 7. Do not return any other content.
 
 Example Output Format:
